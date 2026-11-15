@@ -4,16 +4,16 @@
 **IDE:** Remix VM · **Compiler:** Solidity 0.8.34  
 **Test conditions:** Set 1 (80 → 95, 20 array elements)
 
-This repository contains a Student Record smart contract, three Solidity data-location experiments, and the documented results for the assignment.
+I used Remix IDE to test how `memory`, `storage`, and `calldata` work in Solidity. This repository contains my contract code, experiment results, and screenshots.
 
 ## Contents
 
-- [REPORT.md](REPORT.md) — experimental predictions, observations, explanations, and answers to the seven conceptual questions
+- [REPORT.md](REPORT.md) — my report with predictions, results, and answers to the seven questions
 - [StudentRecord.sol](StudentRecord.sol) — the six required contract functions
-- [CalldataExperiment.sol](CalldataExperiment.sol) — compiling version of the read-only calldata experiment
-- [screenshots/](screenshots/) — original Remix experiment evidence (full-browser screenshots cropped to remove tabs, address bar, and bookmarks)
+- [CalldataExperiment.sol](CalldataExperiment.sol) — code for Experiment B
+- [screenshots/](screenshots/) — screenshots from my Remix experiments
 
-**Note:** I used Set 1 because the assignment handout does not specify how Sets 1–5 are assigned to individual students.
+**Note:** I used Set 1 because the assignment did not say which student should use each set.
 
 ## Results at a glance
 
@@ -25,7 +25,7 @@ This repository contains a Student Record smart contract, three Solidity data-lo
 
 ## Remix experiment screenshots
 
-The images are referenced as relative repository files so that they display inline on GitHub.
+Below are the screenshots I saved while running the experiments in Remix.
 
 ### Setup — deployment and initial student
 
@@ -35,21 +35,21 @@ The images are referenced as relative repository files so that they display inli
 
 ### Experiment A — memory vs. storage
 
-**The memory update returns 95:**
+**Memory function returned 95:**
 
 ![updateScoreMemory returns 95](screenshots/02-memory-return.png)
 
-**The original score remains 80:**
+**The saved score was still 80:**
 
 ![getStudent shows 80 after memory update](screenshots/03-memory-original-score.png)
 
-**The storage update changes the original score to 95:**
+**After the storage update, the saved score became 95:**
 
 ![getStudent shows 95 after storage update](screenshots/04-storage-updated-score.png)
 
 ### Experiment B — calldata read-only
 
-**Trying to write to calldata raises a compiler error:**
+**Changing a calldata element caused a compiler error:**
 
 ```solidity
 numbers[0] = 100; // TypeError: Calldata arrays are read-only.
@@ -57,7 +57,7 @@ numbers[0] = 100; // TypeError: Calldata arrays are read-only.
 
 ![Calldata read-only compiler error](screenshots/05-calldata-compiler-error.png)
 
-**Copying calldata to memory compiles and works:**
+**Copying calldata to memory worked:**
 
 ![Memory-copy version compiles](screenshots/06-calldata-memory-compile.png)
 
@@ -81,4 +81,4 @@ numbers[0] = 100; // TypeError: Calldata arrays are read-only.
 4. Experiment B: try the intentionally invalid assignment shown above, then compile `CalldataExperiment.sol` and call `testCalldata([10,20,30])`.
 5. Experiment C: invoke both summation functions with `[1,2,...,20]` and compare the transaction logs' gas figures.
 
-See the [Markdown report](REPORT.md) for full interpretation and question answers.
+For the explanations and answers to the seven questions, see [REPORT.md](REPORT.md).
