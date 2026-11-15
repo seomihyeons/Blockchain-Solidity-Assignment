@@ -4,15 +4,15 @@
 **Environment:** Remix VM · Solidity 0.8.34  
 **Experimental values:** Set 1 — starting score 80, target score 95, array length 20
 
-*Set-selection note:* The handout lists five sets but provides no student-to-set assignment rule. I used Set 1; this should not be taken as confirmation that Set 1 was individually assigned.
+I used Set 1 because the assignment did not explain how the sets were assigned to students.
 
-## Objective and implementation
+## Purpose and implementation
 
-I implemented a `StudentRecord` contract to investigate the different data locations in Solidity. It has a `Student` struct with `id`, `name`, and `score`, plus an ID-to-student mapping. The six required functions are `addStudent`, `getStudent`, `updateScoreMemory`, `updateScoreStorage`, `sumScoresMemory`, and `sumScoresCalldata`. The score-summing functions store their outputs in state variables so their transactions have measurable gas costs.
+The goal of this assignment was to learn the difference between `memory`, `storage`, and `calldata` in Solidity. I made a `StudentRecord` contract with a `Student` struct (`id`, `name`, and `score`) and a mapping to find students by ID. I added the six required functions: `addStudent`, `getStudent`, `updateScoreMemory`, `updateScoreStorage`, `sumScoresMemory`, and `sumScoresCalldata`. The last two functions save their sums in state variables so I could compare their gas costs in Remix.
 
 ## Experiment A — memory vs. storage
 
-**Prediction before execution:** The memory function will return 95 but will not change the stored score of 80. The storage function will change the original score to 95.
+**Prediction:** I expected the memory function to return 95 while the saved score stayed at 80. I expected the storage function to change the saved score to 95.
 
 | Operation | Observed result |
 |---|---|
@@ -21,42 +21,42 @@ I implemented a `StudentRecord` contract to investigate the different data locat
 | `getStudent(1)` after memory update | Stored score still `80` |
 | `updateScoreStorage(1,95)`, then `getStudent(1)` | Stored score now `95` |
 
-A `memory` variable contains a temporary copy of the struct, so editing it does not modify the mapping entry. A `storage` reference points to the original record, so its changes persist.
+**What I learned:** With `memory`, I changed a copy of the student record, so `getStudent` still returned 80. With `storage`, I changed the actual saved record, so `getStudent` returned 95.
 
 ## Experiment B — calldata is read-only
 
-**Prediction before execution:** Assigning to `numbers[0]` in a `calldata` array will fail compilation, but editing a copied `memory` array will work.
+**Prediction:** I expected a compiler error when trying to change `numbers[0]` directly in `calldata`. I expected it to work after copying the array into `memory`.
 
-The direct assignment `numbers[0] = 100;` generated **`TypeError: Calldata arrays are read-only.`** I then copied the input using `uint256[] memory copiedNumbers = numbers;`. After setting `copiedNumbers[0] = 100;`, the contract compiled successfully. Calling `testCalldata([10,20,30])` returned **100**. This verifies that calldata is immutable while its independent memory copy is writable.
+**Result:** When I tried `numbers[0] = 100;`, Remix showed **`TypeError: Calldata arrays are read-only.`** Next, I used `uint256[] memory copiedNumbers = numbers;` and changed `copiedNumbers[0]` to 100. This compiled successfully, and `testCalldata([10,20,30])` returned **100**. So I could read the calldata array, but I had to make a memory copy to change its values.
 
 ## Experiment C — gas comparison
 
-**Prediction before execution:** The calldata function will use less gas because no complete input-array copy is required.
+**Prediction:** I expected `sumScoresCalldata` to use less gas because the input array does not need to be copied into memory.
 
-Both functions received the same 20 integers, `[1,2,...,20]`, whose expected sum is 210.
+I used the same 20 numbers, `[1,2,...,20]`, for both functions. Their sum should be 210.
 
 | Measure | Memory | Calldata |
 |---|---:|---:|
 | Transaction cost | **57,759 gas** | **52,905 gas** |
 | Execution cost | **33,615 gas** | **28,761 gas** |
 
-The calldata variant used **4,854 less gas**, a reduction of approximately **8.4%** in transaction cost. The measured saving is consistent with avoiding a memory copy. Exact differences depend on the program and execution settings. The sum of 210 is calculated from the inputs; the supplied gas screenshots do not independently show the stored total values.
+**Result:** `sumScoresCalldata` used **4,854 less gas** than `sumScoresMemory`, which is about **8.4% less** in transaction cost. This matches my prediction: reading from calldata can save gas by avoiding an extra memory copy. The exact gas amount can change depending on the code and execution settings. I calculated 210 from the input numbers, but the gas screenshots do not show the stored totals.
 
 ## Conceptual questions
 
-**1. Difference between memory, storage, and calldata:** `storage` is persistent contract state; `memory` is temporary, writable data during execution; `calldata` is read-only data supplied to a call.
+**1. What is the difference between memory, storage, and calldata?** `storage` keeps data in the contract after a function ends. `memory` is temporary data used while a function runs. `calldata` holds input data and cannot be changed directly.
 
-**2. Why does a memory edit not change the original?** The memory struct is a separate copy rather than the mapping's underlying record.
+**2. Why doesn't changing memory change the original data?** The value in memory is a copy, so changing it does not update the student stored in the mapping.
 
-**3. Why does a storage edit change the original?** The storage reference refers directly to the same persistent struct.
+**3. Why does changing storage update the original data?** A storage reference points to the student record itself, so the changes are saved.
 
-**4. What happens after a function finishes?** Temporary memory contents do not persist as contract state after execution.
+**4. What happens to memory after the function ends?** The temporary data is no longer kept as part of the contract state.
 
-**5. Why is storage more expensive?** Persisting and updating blockchain state generally costs more gas than using temporary working memory.
+**5. Why does storage cost more gas?** Saving data in the blockchain state usually takes more gas than working with temporary memory.
 
-**6. Why is calldata immutable and potentially cheaper?** It is a read-only function-input area. Reading directly from it can avoid a separate memory allocation and copy.
+**6. Why can't calldata be changed, and why can it be cheaper?** Calldata is a read-only area for function inputs. If a function only needs to read the input, it may save gas by avoiding a memory copy.
 
-**7. Why `string calldata name` in `addStudent`?** The function only needs to read the supplied name before storing it. Using `memory` would still work but would require an intermediate copy and might use more gas. The eventual storage write is required in either case.
+**7. Why did I use `string calldata name` in `addStudent`?** The function only needs to read the name and save it. Using `memory` would also work, but it would create another copy of the input and could cost more gas. The name still needs to be written to storage.
 
-**Evidence:** Actual Remix screenshots are embedded in [README.md](README.md#remix-experiment-screenshots).  
-**References:** [Solidity documentation](https://docs.soliditylang.org/) · [Remix IDE](https://remix.ethereum.org/).
+**Screenshots:** See [README.md](README.md#remix-experiment-screenshots).  
+**References:** [Solidity documentation](https://docs.soliditylang.org/) and [Remix IDE](https://remix.ethereum.org/).
